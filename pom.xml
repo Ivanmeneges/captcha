@@ -45,9 +45,9 @@
 
     <repositories>
         <repository>
-            <id>ossrh</id>
-            <name>CentralRepository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>ossrh-central</id>
+            <name>MavenCentralRepository</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
             <layout>default</layout>
             <snapshots>
                 <enabled>true</enabled>
@@ -67,11 +67,11 @@
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
         </snapshotRepository>
         <repository>
             <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>https://central.sonatype.com/api/v1/publisher</url>
         </repository>
     </distributionManagement>
 
@@ -85,13 +85,14 @@
         <maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
         <maven.war.plugin.version>3.1.0</maven.war.plugin.version>
         <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
-        <maven.jacoco.version>0.8.5</maven.jacoco.version>
+        <maven.jacoco.version>0.8.11</maven.jacoco.version>
         <maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version>
         <maven.javadoc.version>3.2.0</maven.javadoc.version>
         <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
 
         <spring-cloud.version>Hoxton.SR8</spring-cloud.version>
         <spring.boot.version>3.2.3</spring.boot.version>
+        <central.publishing.maven.plugin.version>0.7.0</central.publishing.maven.plugin.version>
 
         <sonar.exclusions>**/dto/**,**/entity/**,**/exception/**,**/spi/**,**/advice/**,**/config/**</sonar.exclusions>
         <sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**</sonar.cpd.exclusions>
@@ -177,8 +178,21 @@
                             <layout>ZIP</layout>
                         </configuration>
                         <executions>
+                            <!-- Build info and repackage -->
+                            <execution>
+                                <id>build-info-repackage</id>
+                                <goals>
+                                    <goal>build-info</goal>
+                                    <goal>repackage</goal>
+                                </goals>
+                                <configuration>
+                                    <attach>false</attach>
+                                </configuration>
+                            </execution>
+                            <!-- Integration test startup -->
                             <execution>
                                 <id>pre-integration-test</id>
+                                <phase>pre-integration-test</phase>
                                 <goals>
                                     <goal>start</goal>
                                 </goals>
@@ -193,19 +207,14 @@
                                         <argument>--server.port=8090</argument>
                                         <argument>--server.servlet.path=/app/generic</argument>
                                     </arguments>
-
                                 </configuration>
                             </execution>
+                            <!-- Integration test shutdown -->
                             <execution>
                                 <id>post-integration-test</id>
+                                <phase>post-integration-test</phase>
                                 <goals>
                                     <goal>stop</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <goals>
-                                    <goal>build-info</goal>
-                                    <goal>repackage</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -319,14 +328,13 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.7</version>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central.publishing.maven.plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                    <publishingServerId>ossrh</publishingServerId>
+                    <autoPublish>false</autoPublish>
                 </configuration>
             </plugin>
 
